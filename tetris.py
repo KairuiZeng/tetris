@@ -143,7 +143,6 @@ shape_colours = [(0, 255, 0), (255, 0, 0), (0, 255, 255),
 
 
 class Piece(object):
-    # NEW THING HAPPENED HERE NANI--------------------------------------------------
     def __init__(self, x, y, shape):
         self.x = x
         self.y = y
@@ -152,6 +151,31 @@ class Piece(object):
         self.rotation = 0
     pass
 
+class button():
+    def __init__(self, color, x, y, width, height, text=''):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self, win, outline=None):
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self. height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('consolas', 30)
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
+
+    def isOver(self, pos):
+        if pos[0] > self.x and pos[0] <self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+        return False
 
 def create_grid(locked_positions = {}):
     grid = [[(0, 0, 0) for x in range(10)] for x in range(20)]
@@ -273,10 +297,7 @@ def draw_next_shape(shape, surface):
 def update_score(new_score):
     score = max_score()
 
-    with open('scores.txt', 'r') as f:
-        lines = f.readlines()
-        score = lines[0].strip()
-    with open('scores.txt', 'r') as f:
+    with open('scores.txt', 'w') as f:
         if int(score) > new_score:
             f.write(str(score))
         else:
@@ -288,10 +309,10 @@ def max_score():
         lines = f.readlines()
         score = lines[0].strip()
 
-    return int(score)
+    return score
 
 
-def draw_window(surface, grid, score = 0, last_score = 0):
+def draw_window(surface, grid, score=0, last_score=0):
     surface.fill((0, 0, 0)) # 127, 255, 212 for aquamarine
 
     pygame.font.init()
@@ -310,7 +331,7 @@ def draw_window(surface, grid, score = 0, last_score = 0):
     surface.blit(label, (sx + 20, sy + 160))
 
     # high score
-    label = font.render('High Score ' + str(last_score), 1, (255, 255, 255))
+    label = font.render('High Score ' + last_score, 1, (255, 255, 255))
 
     sx = top_left_x - 200
     sy = top_left_y + 200
@@ -414,17 +435,37 @@ def main(win):
 
 
 def main_menu(win):
+    sx = top_left_x + play_width / 2
+    sy = top_left_y + play_height / 2
+
     run = True
+    start_button = button((54, 100, 139), sx - 125, sy, 250, 100, 'Start Game')
     while run:
-        win.fill((0, 0, 0))
-        draw_text_middle(win, 'Press any key to play', 60, (255, 255, 255))
+        win.fill((0, 134, 139))
+        start_button.draw(win, (0, 0, 0))
+
+        font = pygame.font.SysFont('consolas', 100)
+        label = font.render('TETRIS', 1, (255, 255, 255))
+
+        win.blit(label, (sx - 175, sy - 250))
+
         pygame.display.update()
+
         for event in pygame.event.get():
+            pos = pygame.mouse.get_pos()
+
             if event.type == pygame.QUIT:
                 run = False
                 pygame.display.quit()
-            if event.type == pygame.KEYDOWN:
-                main(win)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if start_button.isOver(pos):
+                    main(win)
+
+            if event.type == pygame.MOUSEMOTION:
+                if start_button.isOver(pos):
+                    start_button.color = (255, 165, 79)
+                else:
+                    start_button.color = (54, 100, 139)
 
 
 win = pygame.display.set_mode((s_width, s_height))
